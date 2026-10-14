@@ -1,0 +1,15 @@
+{
+  "name": "cafeteriapp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Plataforma web multirol para la gestión de pequeñas cafeterías",
+  "scripts": {
+    "setup": "npm install && npm --prefix server install && npm --prefix client install && npm --prefix server exec prisma migrate dev -- --name init",
+    "dev": "concurrently -n api,web -c yellow,cyan \"npm --prefix server run dev\" \"npm --prefix client run dev\"",
+    "seed": "npm --prefix server run db:seed",
+    "build": "npm --prefix client run build"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}

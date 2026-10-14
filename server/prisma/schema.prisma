@@ -1,0 +1,75 @@
+// CafeteriApp - Modelo de datos (Sprint 1)
+// Nota: SQLite no maneja enums de forma nativa en todas las versiones,
+// por eso los roles / tipos se guardan como String y se validan en la API (Zod).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+/// Roles: ADMIN | CASHIER | CLIENT
+model User {
+  id        Int             @id @default(autoincrement())
+  name      String
+  email     String          @unique
+  password  String
+  role      String          @default("CLIENT")
+  active    Boolean         @default(true)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  movements StockMovement[]
+}
+
+model Category {
+  id          Int             @id @default(autoincrement())
+  name        String          @unique
+  description String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  items       InventoryItem[]
+}
+
+/// Insumo del inventario (granos de café, leche, vasos, etc.)
+/// Unidades: UNIDAD | KG | G | L | ML | PAQUETE
+model InventoryItem {
+  id          Int             @id @default(autoincrement())
+  sku         String          @unique
+  name        String
+  description String?
+  unit        String          @default("UNIDAD")
+  stock       Float           @default(0)
+  minStock    Float           @default(0)
+  unitCost    Float           @default(0)
+  supplier    String?
+  active      Boolean         @default(true)
+  categoryId  Int?
+  category    Category?       @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  movements   StockMovement[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([categoryId])
+}
+
+/// Historial de movimientos de stock. Tipos: ENTRADA | SALIDA | AJUSTE
+/// (En sprints futuros los pedidos generarán SALIDAS automáticas.)
+model StockMovement {
+  id            Int           @id @default(autoincrement())
+  type          String
+  quantity      Float
+  previousStock Float
+  newStock      Float
+  reason        String?
+  itemId        Int
+  item          InventoryItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  userId        Int?
+  user          User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt     DateTime      @default(now())
+
+  @@index([itemId])
+  @@index([createdAt])
+}
